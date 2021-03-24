@@ -1,8 +1,8 @@
 package com.alhous.ai.model;
 
 public class Camera {
-    private int number;
-    private String name;
+    private int number = 0;
+    private String name = "LOCAL WEB CAM";
 
     public int getNumber() {
         return number;
