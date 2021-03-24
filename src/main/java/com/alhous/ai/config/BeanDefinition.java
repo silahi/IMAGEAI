@@ -5,6 +5,7 @@ import com.alhous.ai.model.Category;
 import com.alhous.ai.model.Dataset;
 import com.alhous.ai.model.DatasetServiceImpl;
 import com.alhous.ai.model.IDatasetService;
+import com.alhous.ai.model.LiveServiceImpl;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,5 +33,10 @@ public class BeanDefinition {
     @Bean
     public IDatasetService datasetService() {
         return new DatasetServiceImpl();
+    }
+
+    @Bean
+    public LiveServiceImpl liveServiceImpl() {
+        return new LiveServiceImpl();
     }
 }

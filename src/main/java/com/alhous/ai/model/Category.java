@@ -1,12 +1,13 @@
 package com.alhous.ai.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.Mat;
 
 public class Category {
     private String name;
-    private List<Mat> images;
+    private List<Mat> images = new ArrayList<>();
     public String getName() {
         return name;
     }

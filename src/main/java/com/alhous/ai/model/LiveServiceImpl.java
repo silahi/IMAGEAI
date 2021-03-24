@@ -5,10 +5,9 @@ import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-public class LiveService implements ILiveService {
-    @Autowired
+public class LiveServiceImpl implements ILiveService {
+    
     private Camera camera;
     private VideoCapture videoCapture;
     private Thread liveThread;
