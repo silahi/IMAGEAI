@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
+import com.alhous.ai.model.Camera;
 import com.alhous.ai.model.Category;
 import com.alhous.ai.model.Dataset;
 import com.alhous.ai.model.IDatasetService;
@@ -27,6 +28,7 @@ import com.alhous.ai.model.LiveServiceImpl;
 
 import org.opencv.core.Mat;
 import org.opencv.highgui.HighGui;
+import org.springframework.context.ApplicationContext;
 
 public class Home {
     private JFrame frame;
@@ -35,32 +37,26 @@ public class Home {
     private int w = 800, h = 600;
     private Painter painter;
     private List<Category> categories;
+    Thread th;
 
-    public Home(LiveServiceImpl liveService, IDatasetService datasetService) {
+    public Home(ApplicationContext context) {
+        LiveServiceImpl liveService = context.getBean(LiveServiceImpl.class);
+        IDatasetService datasetService = context.getBean(IDatasetService.class);
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage());
         }
+
         categories = new ArrayList<>();
         frame = new JFrame("IMAGEAI");
         frame.setSize(w, h);
         frame.setLocationByPlatform(true);
         frame.getContentPane().setBackground(Color.WHITE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon ii = new ImageIcon(this.getClass().getClassLoader().getResource("ricon.png"));
         frame.setIconImage(ii.getImage());
-        Thread th = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!liveService.getLiveThread().isInterrupted()) {
-                    Mat m = new Mat();
-                    liveService.getVideoCapture().read(m);
-                    painter.setImage(HighGui.toBufferedImage(m));
-                    painter.repaint();
-                }
-            }
-        });
-
+        th = paintThread(liveService);
         frame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -94,12 +90,47 @@ public class Home {
 
         JPanel right_panel = new JPanel();
         JPanel p_right_panel = new JPanel();
-        p_right_panel.setLayout(new java.awt.GridLayout(2, 1, 15, 15));
+        p_right_panel.setLayout(new java.awt.GridLayout(3, 1, 15, 15));
         JButton capture_btn = new JButton("CAPTURE");
         JButton save_btn = new JButton("SAVE");
+        JButton cam_btn = new JButton("CAMERA");
+
+        p_right_panel.add(cam_btn);
         p_right_panel.add(capture_btn);
         p_right_panel.add(save_btn);
         right_panel.add(p_right_panel);
+
+        cam_btn.addActionListener(e -> {
+            Camera camera = context.getBean(Camera.class);
+
+            if (liveService.getCamera().getNumber() == 0) {
+                boolean value = JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(cam_btn,
+                        "Switching LOCAL CAMERA to USB CAMERA");
+                if (value) {
+                    liveService.stop();
+                    th.interrupt();
+                    camera.setNumber(1);
+                    camera.setName("USB CAMERA");
+                    liveService.start();
+                    th = paintThread(liveService);
+                    th.start();
+
+                }
+            } else {
+                boolean value = JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(cam_btn,
+                        "Switching USB CAMERA to LOCAL CAMERA");
+                if (value) {
+                    liveService.stop();
+                    th.interrupt();
+                    camera.setNumber(0);
+                    camera.setName("LOCAL CAMERA");
+                    liveService.start();
+                    th = paintThread(liveService);
+                    th.start();
+                }
+            }
+
+        });
 
         capture_btn.addActionListener(e -> {
             Mat img = new Mat();
@@ -125,7 +156,7 @@ public class Home {
                     boolean v = categories.stream().filter(ct -> ct.getName() == ct_name_tf.getText()).findFirst()
                             .isPresent();
                     if (v == false) {
-                        Category cat = new Category();
+                        Category cat = context.getBean(Category.class);
                         cat.setName(ct_name_tf.getText());
                         cat.getImages().add(img);
                         categories.add(cat);
@@ -182,7 +213,7 @@ public class Home {
 
         });
 
-        Arrays.asList(save_btn, capture_btn).forEach(btn -> {
+        Arrays.asList(save_btn, capture_btn, cam_btn).forEach(btn -> {
             btn.setFont(font);
             btn.setFocusPainted(false);
 
@@ -191,6 +222,21 @@ public class Home {
         Arrays.asList(p1, p2, right_panel, left_panel, p_right_panel, p_left_panel).forEach(p -> {
             p.setOpaque(false);
         });
+    }
+
+    public Thread paintThread(LiveServiceImpl liveService) {
+        Thread th = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!liveService.getLiveThread().isInterrupted()) {
+                    Mat m = new Mat();
+                    liveService.getVideoCapture().read(m);
+                    painter.setImage(HighGui.toBufferedImage(m));
+                    painter.repaint();
+                }
+            }
+        });
+        return th;
     }
 
     public void addImage(Mat mat, String dataset_name, String category_name) {

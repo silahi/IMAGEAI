@@ -5,9 +5,13 @@ import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 public class LiveServiceImpl implements ILiveService {
-    
+
+    @Autowired
+    @Qualifier("camera")
     private Camera camera;
     private VideoCapture videoCapture;
     private Thread liveThread;
@@ -76,6 +80,10 @@ public class LiveServiceImpl implements ILiveService {
 
     public void setMat(Mat mat) {
         this.mat = mat;
+    }
+
+    public Logger getLOG() {
+        return LOG;
     }
 
 }
