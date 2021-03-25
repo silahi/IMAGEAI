@@ -17,8 +17,7 @@ public class Main {
         context.scan("com.alhous.ai");
         context.refresh();
 
-        Camera camera = context.getBean(Camera.class);
-        camera.setNumber(1);
+        Camera camera = context.getBean(Camera.class); 
         LiveServiceImpl liveService = context.getBean(LiveServiceImpl.class);
         liveService.setCamera(camera);
         liveService.start();
